@@ -64,21 +64,32 @@ modules.preuse = (ship) ->
 			(next) ->
 				C = cache[a]
 				return next null, C.module if C?.valid
-				return C.once 'online', next if C?
+				return C.wait next if C?
 
 				C = cache[a] = new events.EventEmitter()
-				C.once 'online', next
+				C.waiting = 0
+				C.wait = (next) ->
+					C.waiting++
+					C.once 'online', ->
+						C.waiting--
+						next null, C.module
+
+				C.wait next
 
 				resolve = ->
+					log.info 'resolve', a
 					next = (err,r) ->
-						if err
+						if err							
 							if C.valid
-								C.valid = false					
-								setTimeout resolve, RETRY_INTERVAL
+								if C.waiting
+									C.valid = false
+									setTimeout resolve, RETRY_INTERVAL
+								else
+									delete cache[a]
 						else
 							C.valid = true
 							C.module = r
-							C.emit 'online', null, r
+							C.emit 'online'
 
 					R = repo[a] or default_handler
 					R.call ship, a, next					
