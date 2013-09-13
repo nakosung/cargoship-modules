@@ -24,13 +24,13 @@ external_service = (ship) ->
 			[service,meta] = a.split(':')			
 
 			meta = 
-				user : {}
+				user : ship.user
 				meta : meta	
 
 			s = mx.createStream [service,JSON.stringify(meta)].join(':')
 			d = dnode()
 			es.pipeline(s,d,s).on 'error', (e) ->
-				log.error "pipeline error #{a}", e
+				console.trace "pipeline error #{a}", String(e)
 				s.end()
 			s.on 'end', ->
 				log.error "connection dropped #{a}"
@@ -58,6 +58,16 @@ modules.preuse = (ship) ->
 		repo[name] = func
 	cache = {}	
 	default_handler = external_service(ship)
+
+	ship.methods = (methods) ->
+		ship.use (m) ->
+			M = {}			
+			for k,v of methods
+				M[k] = v.bind(m)
+			d = dnode M
+			es.pipeline(d,m,d).on 'error', (e) ->
+				log.error String(e)
+				m.end()
 
 	ship.require = (args...,next) ->	
 		jobs = args.map (a) ->
