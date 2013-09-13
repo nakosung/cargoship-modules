@@ -10,6 +10,7 @@ module.exports = ->
 	REQUIRE_TIMEOUT = 3000
 
 	modules = (m,next) -> next m
+	modules.signature = 'modules'
 
 	external_service = (ship) ->
 		mxs = []
