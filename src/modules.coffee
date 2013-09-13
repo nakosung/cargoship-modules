@@ -56,8 +56,14 @@ module.exports = ->
 
 	modules.preuse = (ship) ->
 		repo = {}
+		patterns = []
 		ship.register = (name,func) ->
-			repo[name] = func
+			if _.isRegExp(name)
+				patterns.push 
+					regexp : name
+					func : func
+			else
+				repo[name] = func
 		cache = {}	
 		default_handler = external_service(ship)
 
@@ -103,7 +109,11 @@ module.exports = ->
 								C.module = r
 								C.emit 'online'
 
-						R = repo[a] or default_handler
+						R = repo[a]
+						unless R?
+							P = _.find patterns, (p) -> 
+								if p.regexp.test(a)
+							R = P?.func or default_handler
 						R.call ship, a, next					
 					resolve()
 
