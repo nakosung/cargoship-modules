@@ -111,8 +111,7 @@ module.exports = ->
 
 						R = repo[a]
 						unless R?
-							P = _.find patterns, (p) -> 
-								if p.regexp.test(a)
+							P = _.find patterns, (p) -> p.regexp.test(a)
 							R = P?.func or default_handler
 						R.call ship, a, next					
 					resolve()
