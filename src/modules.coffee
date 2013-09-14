@@ -91,6 +91,9 @@ module.exports = ->
 						C.once 'online', ->
 							C.waiting--
 							next null, C.module
+						C.once 'offline', ->
+							C.waiting--
+							next 404
 
 					C.wait next
 
@@ -104,6 +107,9 @@ module.exports = ->
 										setTimeout resolve, RETRY_INTERVAL
 									else
 										delete cache[a]
+								else
+									C.emit 'offline'
+									delete cache[a]
 							else
 								C.valid = true
 								C.module = r
