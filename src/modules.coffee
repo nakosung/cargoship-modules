@@ -46,7 +46,7 @@ module.exports = ->
 					connect_with mxs[0]
 				else
 					log.info "no servers found waiting!"
-					this.once 'connect', (mx) ->
+					ship.once 'connect', (mx) ->
 						log.info "a server found"
 						connect_with mx
 				
