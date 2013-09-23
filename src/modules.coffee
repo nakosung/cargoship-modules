@@ -77,6 +77,7 @@ module.exports = ->
 					log.error String(e)
 					m.end()
 
+		require_events = new events.EventEmitter()			
 		ship.require = (args...,next) ->	
 			jobs = args.map (a) ->
 				(next) ->
@@ -85,10 +86,12 @@ module.exports = ->
 					return C.wait next if C?
 
 					C = cache[a] = new events.EventEmitter()
+					C.once 'online', ->	require_events.emit 'online', a, C.module
+					C.once 'offline', -> require_events.emit 'offline', a, C.module
 					C.waiting = 0
 					C.wait = (next) ->
 						C.waiting++
-						C.once 'online', ->
+						C.once 'online', ->							
 							C.waiting--
 							next null, C.module
 						C.once 'offline', ->
@@ -109,6 +112,7 @@ module.exports = ->
 										delete cache[a]
 								else
 									C.emit 'offline'
+									C.removeAllListeners()
 									delete cache[a]
 							else
 								C.valid = true
@@ -121,6 +125,7 @@ module.exports = ->
 							R = P?.func or default_handler
 						R.call ship, a, next					
 					resolve()
+			_.extend ship.require, require_events
 
 			timedout = false
 			timer = setTimeout (->			
