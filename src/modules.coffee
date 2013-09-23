@@ -16,7 +16,7 @@ module.exports = ->
 		mxs = []
 		ship.on 'connect', (mx) -> 
 			mxs.push mx
-			mx.upstream.on 'end', ->
+			mx.upstream.once 'end', ->
 				mxs = _.without mxs, mx
 
 		external_service = (a,next) ->
@@ -31,13 +31,13 @@ module.exports = ->
 
 				s = mx.createStream [service,JSON.stringify(meta)].join(':')
 				d = dnode()
-				es.pipeline(s,d,s).on 'error', (e) ->
+				es.pipeline(s,d,s).once 'error', (e) ->
 					console.trace "pipeline error #{a}", String(e)
 					s.end()
-				s.on 'end', ->
+				s.once 'end', ->
 					log.error "connection dropped #{a}"
 					next('end')
-				d.on 'remote', (r) ->
+				d.once 'remote', (r) ->
 					log.info "connected to #{a}"
 					next(null,r)
 
@@ -73,7 +73,7 @@ module.exports = ->
 				for k,v of methods
 					M[k] = v.bind(m)
 				d = dnode M
-				es.pipeline(d,m,d).on 'error', (e) ->
+				es.pipeline(d,m,d).once 'error', (e) ->
 					log.error String(e)
 					m.end()
 
