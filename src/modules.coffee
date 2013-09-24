@@ -125,7 +125,6 @@ module.exports = ->
 							R = P?.func or default_handler
 						R.call ship, a, next					
 					resolve()
-			_.extend ship.require, require_events
 
 			timedout = false
 			timer = setTimeout (->			
@@ -137,5 +136,6 @@ module.exports = ->
 			async.parallel jobs, (err,result) ->
 				clearTimeout timer
 				next err, result... unless timedout
+		_.extend ship.require, require_events
 
 	modules
