@@ -32,7 +32,7 @@ module.exports = ->
 				s = mx.createStream [service,JSON.stringify(meta)].join(':')
 				d = dnode()
 				es.pipeline(s,d,s).once 'error', (e) ->
-					console.trace "pipeline error #{a}", String(e)
+					log.error "pipeline error #{a}", String(e), String(e?.stack)
 					s.end()
 				s.once 'end', ->
 					log.error "connection dropped #{a}"
