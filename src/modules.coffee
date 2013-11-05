@@ -32,7 +32,7 @@ module.exports = ->
 				s = mx.createStream [service,JSON.stringify(meta)].join(':')
 				d = dnode()
 				es.pipeline(s,d,s).once 'error', (e) ->
-					console.trace "pipeline error #{a}", String(e)
+					log.error "pipeline error #{a}", String(e), String(e?.stack)
 					s.end()
 				s.once 'end', ->
 					log.error "connection dropped #{a}"
@@ -68,14 +68,24 @@ module.exports = ->
 		default_handler = external_service(ship)
 
 		ship.methods = (methods) ->
+			begin = methods['$begin']
+			end = methods['$end']
+			begin ?= (next) -> next null
+			end ?= ->
+
 			ship.use (m) ->
 				M = {}			
 				for k,v of methods
 					M[k] = v.bind(m)
 				d = dnode M
-				es.pipeline(d,m,d).once 'error', (e) ->
-					log.error String(e)
-					m.end()
+				m.once 'end', ->
+					end.call m
+				begin.call m, (err) ->
+					return m.end() if err
+
+					es.pipeline(d,m,d).once 'error', (e) ->
+						log.error String(e)
+						m.end()
 
 		require_events = new events.EventEmitter()			
 		ship.require = (args...,next) ->	
