@@ -110,7 +110,7 @@ module.exports = ->
 					C.wait next
 
 					resolve = ->
-						ship.info 'resolve', a
+						ship.info "resolve #{a}"
 						next = (err,r) ->
 							if err							
 								if C.valid
