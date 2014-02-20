@@ -2,7 +2,6 @@ _ = require 'underscore'
 events = require 'events'
 async = require 'async'
 es = require 'event-stream'
-log = require 'winston'
 dnode = require 'dnode'
 
 module.exports = ->
@@ -21,7 +20,7 @@ module.exports = ->
 
 		external_service = (a,next) ->
 			connect_with = (mx) ->
-				log.info "connecting #{a}"
+				ship.info "connecting #{a}"
 
 				[service,meta] = a.split(':')			
 
@@ -32,22 +31,22 @@ module.exports = ->
 				s = mx.createStream [service,JSON.stringify(meta)].join(':')
 				d = dnode()
 				es.pipeline(s,d,s).once 'error', (e) ->
-					log.error "pipeline error #{a}", String(e), String(e?.stack)
+					ship.error "pipeline error #{a}", error:String(e), stack:String(e?.stack)
 					s.end()
 				s.once 'end', ->
-					log.error "connection dropped #{a}"
+					ship.error "connection dropped #{a}"
 					next('end')
 				d.once 'remote', (r) ->
-					log.info "connected to #{a}"
+					ship.info "connected to #{a}"
 					next(null,r)
 
 			connect = ->
 				if mxs.length
 					connect_with mxs[0]
 				else
-					log.info "no servers found waiting!"
+					ship.info "no servers found waiting!"
 					ship.once 'connect', (mx) ->
-						log.info "a server found"
+						ship.info "a server found"
 						connect_with mx
 				
 			connect()
@@ -84,7 +83,7 @@ module.exports = ->
 					return m.end() if err
 
 					es.pipeline(d,m,d).once 'error', (e) ->
-						log.error String(e)
+						ship.error String(e)
 						m.end()
 
 		require_events = new events.EventEmitter()			
@@ -111,7 +110,7 @@ module.exports = ->
 					C.wait next
 
 					resolve = ->
-						log.info 'resolve', a
+						ship.info 'resolve', a
 						next = (err,r) ->
 							if err							
 								if C.valid
@@ -139,7 +138,7 @@ module.exports = ->
 			timedout = false
 			timer = setTimeout (->			
 				timedout = true
-				log.error 'timed out!'
+				ship.error 'timed out!'
 				next 'timeout'
 				), REQUIRE_TIMEOUT
 
