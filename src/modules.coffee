@@ -138,7 +138,7 @@ module.exports = ->
 			timedout = false
 			timer = setTimeout (->			
 				timedout = true
-				ship.error 'timed out!'
+				ship.error 'timed out!', args:args
 				next 'timeout'
 				), REQUIRE_TIMEOUT
 
